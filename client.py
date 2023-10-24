@@ -4,7 +4,7 @@ import xmlrpc.client
 def print_tabuleiro(tab):
     for row in tab:
         for cell in row:
-            print(f"[{' ' if cell == 0 else ('x' if cell == 2 else 'o') }]", end='')
+            print(f"[{' ' if cell == 0 else ('x' if cell == 1 else 'o') }]", end='')
         print()
 
 tab1 = [[0] * 6 for _ in range(6)]
@@ -23,19 +23,20 @@ with xmlrpc.client.ServerProxy("http://127.0.0.1:8000/") as cli:
     for _ in range(3):
         while True:
             vx, vy = map(int, input("Insira as coordenadas de posicionamento (x y): ").split())
-            # Subtrair 1 das coordenadas para corresponder à matriz
-            vx -= 1
-            vy -= 1
-            if 0 <= vx <= 5 and 0 <= vy <= 5:
+            if 0 <= vx <= 5 and 0 <= vy <= 5:  # Verifique se as coordenadas estão dentro dos limites
                 if tab1[vx][vy] == 0:
                     break
                 else:
                     print("Você já posicionou um barco nessa posição. Escolha outra.")
             else:
                 print("Coordenadas fora dos limites. Escolha valores entre 1 e 6.")
+        # Adicione 1 às coordenadas antes de enviá-las para o servidor
         cli.positionar(id, vx, vy)
-        # Atualize a matriz tab1 com 'x' nas posições dos barcos
-        tab1[vx][vy] = 'x'
+        # Atualize a matriz tab1 com '1' nas posições dos barcos
+        tab1[vx][vy] = 1
+
+
+
 
     print("Tabuleiro após posicionar os barcos:")
     print_tabuleiro(tab1)
@@ -60,10 +61,10 @@ while True:
         ataque_p = input(f"{jogador}, insira as coordenadas de ataque (x y): ").split()
         if len(ataque_p) == 2 and all(coord.isdigit() for coord in ataque_p):
             ataque_p = list(map(int, ataque_p))
-            if 1 <= ataque_p[0] <= 6 and 1 <= ataque_p[1] <= 6:
+            if 0 <= ataque_p[0] <= 5 and 0 <= ataque_p[1] <= 5:
                 atk = cli.atacar(id, ataque_p[0], ataque_p[1])
                 print("Valor retornado da função atacar:", atk)
-                if atk == '1':
+                if int(atk) == 1:
                     if jogador == "Jogador 1":
                         pontuacao_jogador1 += 1
                         print("Você acertou um barco inimigo!")
@@ -72,7 +73,7 @@ while True:
                         pontuacao_jogador2 += 1
                         print("Você acertou um barco inimigo!")
                         tab1[ataque_p[0] - 1][ataque_p[1] - 1] = 'x'
-                elif atk == '2':
+                elif int(atk) == 2:
                     print("Você acertou uma posição já atacada.")
                 else:
                     print("Seu ataque errou!")

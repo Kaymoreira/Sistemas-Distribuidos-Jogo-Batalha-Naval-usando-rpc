@@ -39,22 +39,24 @@ def atacar(id, px, py):
 
     if id == 1:
         if tab2[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 2
-            if tab2[px][py] != 2:  # Verifica se a posição não foi atacada antes
-                tab2[px][py] = 2  # Marque a posição como atacada
-                users[0].ponto += 1
-                if users[0].ponto == 1:
-                    ganhador = 1
-                return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
+            tab2[px][py] = 2  # Marque a posição como atacada
+            users[0].ponto += 1
+            if users[0].ponto == 3:  # Defina o número de acertos necessários para ganhar
+                ganhador = 1
+            return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
+        else:
+            return "0"  # Retorne "0" para indicar que o ataque falhou
+
     elif id == 2:
         if tab1[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 1
-            if tab1[px][py] != 2:  # Verifica se a posição não foi atacada antes
-                tab1[px][py] = 2  # Marque a posição como atacada
-                users[1].ponto += 1
-                if users[1].ponto == 1:
-                    ganhador = 2
-                return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
-
-    return "0"  # Retorna "0" para indicar que o ataque falhou
+            tab1[px][py] = 2  # Marque a posição como atacada
+            users[1].ponto += 1
+            if users[1].ponto == 3:  # Defina o número de acertos necessários para ganhar
+                ganhador = 2
+            return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
+        else:
+            return "0"  # Retorne "0" para indicar que o ataque falhou
+ # Retorna "0" para indicar que o ataque falhou
 
 
 
