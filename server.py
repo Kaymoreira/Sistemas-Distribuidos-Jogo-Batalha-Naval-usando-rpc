@@ -41,9 +41,11 @@ def atacar(id, px, py):
         if tab2[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 2
             tab2[px][py] = 2  # Marque a posição como atacada
             users[0].ponto += 1
-            if users[0].ponto == 3:  # Defina o número de acertos necessários para ganhar
+            if users[0].ponto == 10:  # Defina o número de acertos necessários para ganhar
                 ganhador = 1
             return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
+        elif tab2[px][py] == 2:  # Verifica se a posição já foi atacada
+            return "2"
         else:
             return "0"  # Retorne "0" para indicar que o ataque falhou
 
@@ -51,17 +53,30 @@ def atacar(id, px, py):
         if tab1[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 1
             tab1[px][py] = 2  # Marque a posição como atacada
             users[1].ponto += 1
-            if users[1].ponto == 3:  # Defina o número de acertos necessários para ganhar
+            if users[1].ponto == 10:  # Defina o número de acertos necessários para ganhar
                 ganhador = 2
             return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
+        elif tab1[px][py] == 2:  # Verifica se a posição já foi atacada
+            return "2"
         else:
             return "0"  # Retorne "0" para indicar que o ataque falhou
- # Retorna "0" para indicar que o ataque falhou
 
 
 
-def get_tabuleiro(id):
-    return tab1 if id == 1 else tab2
+
+
+
+def send_tabuleiros(id, new_tab1, new_tab2):
+    if id == 1:
+        tab1[:] = new_tab1
+        return True
+    elif id == 2:
+        tab2[:] = new_tab2
+        return True
+    return False  # Retorna False se o ID for inválido
+
+
+
 
 def verificar_ganhador():
     global ganhador
@@ -76,8 +91,8 @@ with SimpleXMLRPCServer(('127.0.0.1', 8000)) as server:
     server.register_function(login, "logar")
     server.register_function(positionar, "positionar")
     server.register_function(atacar, "atacar")
-    server.register_function(get_tabuleiro, "get_tabuleiro")
     server.register_function(verificar_ganhador, "ganhador")
+    server.register_function(send_tabuleiros, "send_tabuleiros")
 
 
     print("Servidor da Batalha Naval em execução.")

@@ -6,6 +6,8 @@ def print_tabuleiro(tab):
         for cell in row:
             print(f"[{' ' if cell == 0 else ('1' if tamanho == 1 else ('2' if tamanho == 2 else 'o')) }]", end='')
         print()
+        
+
 
 
 tab1 = [[0] * 6 for _ in range(6)]
@@ -19,47 +21,57 @@ with xmlrpc.client.ServerProxy("http://127.0.0.1:8000/") as cli:
     id = cli.logar()
 
     print("Bem-vindo ao Jogo de Batalha Naval!")
-    print(f"Você é o Jogador {id}. Posicione seus 3 barcos.")
+    print(f"Você é o Jogador {id}. Posicione seus 4 barcos (1, 2, 3 e 4 casas).")
 
-    for _ in range(3):
+    for tamanho in range(1, 5):
         while True:
-            print("Insira as coordenadas de posicionamento:")
-            print("Formato: <tamanho> <x_inicio> <y_inicio> [x_fim y_fim]")
-            print("Exemplo para barco de 1 casa: 1 3 3")
-            print("Exemplo para barco de 2 casas: 2 2 2 2 3")
+            print(f"Insira as coordenadas de posicionamento para um barco de {tamanho} casa(s):")
+            print("Formato: <x_inicio> <y_inicio> [x_fim y_fim ...]")
             input_coords = input().split()
-            
-            if len(input_coords) == 3 or len(input_coords) == 5:
-                tamanho, x_inicio, y_inicio = map(int, input_coords[:3])
 
-                
-                if 0 <= x_inicio <= 5 and 0 <= y_inicio <= 5 and tab1[x_inicio][y_inicio] == 0:
-                    if tamanho == 1:
-                        break  # Barco de 1 casa
-                    elif tamanho == 2 and len(input_coords) == 5:
-                        x_fim, y_fim = map(int, input_coords[3:])
-                        
-                        if 0 <= x_fim <= 5 and 0 <= y_fim <= 5 and (x_inicio == x_fim and y_inicio == y_fim):
-                            print("Coordenadas de finalização inválidas ou barco não está na mesma linha/coluna.")
-                        else:
+            if len(input_coords) >= 2:
+                coordinates = list(map(int, input_coords))
+
+                if len(coordinates) == tamanho * 2:
+                    valid_coordinates = True
+                    for i in range(0, len(coordinates), 2):
+                        x, y = coordinates[i], coordinates[i + 1]
+                        if not (0 <= x <= 5 and 0 <= y <= 5 and tab1[x][y] == 0):
+                            valid_coordinates = False
                             break
+
+                    if valid_coordinates:
+                        break
                     else:
-                        print("Tamanho de barco inválido. Use 1 para barco de 1 casa ou 2 para barco de 2 casas.")
+                        print("Coordenadas inválidas ou barco já posicionado em alguma posição. Escolha outras.")
                 else:
-                    print("Coordenadas inválidas ou barco já posicionado nessa posição. Escolha outra.")
+                    print(f"Insira exatamente {tamanho * 2} coordenadas para um barco de {tamanho} casas.")
             else:
-                print("Formato inválido. Use <tamanho> <x_inicio> <y_inicio> [x_fim y_fim].")
-        
-        cli.positionar(id, x_inicio, y_inicio)
-        tab1[x_inicio][y_inicio] = 1
-        
-        if tamanho == 2:
-            cli.positionar(id, x_fim, y_fim)
-            tab1[x_fim][y_fim] = 1
+                print("Formato inválido. Use <x_inicio> <y_inicio> [x_fim y_fim ...].")
+
+        # Atualize o tabuleiro para todas as casas ocupadas pelo barco com o valor 1
+        for i in range(0, len(coordinates), 2):
+            x, y = coordinates[i], coordinates[i + 1]
+            if id == 1:
+                tab1[x][y] = 1
+            elif id == 2:
+                tab2[x][y] = 1
+
 
     print("Tabuleiro após posicionar os barcos:")
-    print_tabuleiro(tab1)
+    if id == 1:
+        print_tabuleiro(tab1)
+    elif id == 2:
+        print_tabuleiro(tab2)
+    else:
+        print("ID de jogador inválido.")
 
+def enviar_tabuleiros(id, tab1, tab2):
+    cli.send_tabuleiros(id, tab1, tab2)
+
+# Após atualizar os tabuleiros no cliente
+# tab1 e tab2 são as listas atualizadas no cliente
+enviar_tabuleiros(id, tab1, tab2)
 
 while True:
     gg = cli.ganhador()
