@@ -4,8 +4,9 @@ import xmlrpc.client
 def print_tabuleiro(tab):
     for row in tab:
         for cell in row:
-            print(f"[{' ' if cell == 0 else ('x' if cell == 1 else 'o') }]", end='')
+            print(f"[{' ' if cell == 0 else ('1' if tamanho == 1 else ('2' if tamanho == 2 else 'o')) }]", end='')
         print()
+
 
 tab1 = [[0] * 6 for _ in range(6)]
 tab2 = [[0] * 6 for _ in range(6)]
@@ -22,24 +23,43 @@ with xmlrpc.client.ServerProxy("http://127.0.0.1:8000/") as cli:
 
     for _ in range(3):
         while True:
-            vx, vy = map(int, input("Insira as coordenadas de posicionamento (x y): ").split())
-            if 0 <= vx <= 5 and 0 <= vy <= 5:  # Verifique se as coordenadas estão dentro dos limites
-                if tab1[vx][vy] == 0:
-                    break
+            print("Insira as coordenadas de posicionamento:")
+            print("Formato: <tamanho> <x_inicio> <y_inicio> [x_fim y_fim]")
+            print("Exemplo para barco de 1 casa: 1 3 3")
+            print("Exemplo para barco de 2 casas: 2 2 2 2 3")
+            input_coords = input().split()
+            
+            if len(input_coords) == 3 or len(input_coords) == 5:
+                tamanho, x_inicio, y_inicio = map(int, input_coords[:3])
+
+                
+                if 0 <= x_inicio <= 5 and 0 <= y_inicio <= 5 and tab1[x_inicio][y_inicio] == 0:
+                    if tamanho == 1:
+                        break  # Barco de 1 casa
+                    elif tamanho == 2 and len(input_coords) == 5:
+                        x_fim, y_fim = map(int, input_coords[3:])
+                        
+                        if 0 <= x_fim <= 5 and 0 <= y_fim <= 5 and (x_inicio == x_fim and y_inicio == y_fim):
+                            print("Coordenadas de finalização inválidas ou barco não está na mesma linha/coluna.")
+                        else:
+                            break
+                    else:
+                        print("Tamanho de barco inválido. Use 1 para barco de 1 casa ou 2 para barco de 2 casas.")
                 else:
-                    print("Você já posicionou um barco nessa posição. Escolha outra.")
+                    print("Coordenadas inválidas ou barco já posicionado nessa posição. Escolha outra.")
             else:
-                print("Coordenadas fora dos limites. Escolha valores entre 1 e 6.")
-        # Adicione 1 às coordenadas antes de enviá-las para o servidor
-        cli.positionar(id, vx, vy)
-        # Atualize a matriz tab1 com '1' nas posições dos barcos
-        tab1[vx][vy] = 1
-
-
-
+                print("Formato inválido. Use <tamanho> <x_inicio> <y_inicio> [x_fim y_fim].")
+        
+        cli.positionar(id, x_inicio, y_inicio)
+        tab1[x_inicio][y_inicio] = 1
+        
+        if tamanho == 2:
+            cli.positionar(id, x_fim, y_fim)
+            tab1[x_fim][y_fim] = 1
 
     print("Tabuleiro após posicionar os barcos:")
     print_tabuleiro(tab1)
+
 
 while True:
     gg = cli.ganhador()
