@@ -9,6 +9,12 @@ class Users:
 
 users = [Users(), Users()]
 ganhador = 0
+# Mantenha a pontuação para ambos os jogadores
+pontuacao = [0, 0]
+# Variável para controlar o turno atual
+turno_atual = 1
+
+
 
 tab1 = [[0] * 6 for _ in range(6)]
 tab2 = [[0] * 6 for _ in range(6)]
@@ -29,6 +35,12 @@ def positionar(id, px, py):
         tab2[px][py] = 1
     return 1
 
+# Função para alternar o turno
+def alternar_turno():
+    global ganhador
+    if ganhador != 0 or id != turno_atual:
+        return str(ganhador)  # Converta para uma string
+
 def atacar(id, px, py):
     global ganhador
     if ganhador != 0:
@@ -41,8 +53,10 @@ def atacar(id, px, py):
         if tab2[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 2
             tab2[px][py] = 2  # Marque a posição como atacada
             users[0].ponto += 1
+            pontuacao[0] = users[0].ponto # Atualize a pontuação do Jogador 1
             if users[0].ponto == 10:  # Defina o número de acertos necessários para ganhar
                 ganhador = 1
+                alternar_turno()
             return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
         elif tab2[px][py] == 2:  # Verifica se a posição já foi atacada
             return "2"
@@ -53,8 +67,10 @@ def atacar(id, px, py):
         if tab1[px][py] == 1:  # Verifica se há um barco na tabela do Jogador 1
             tab1[px][py] = 2  # Marque a posição como atacada
             users[1].ponto += 1
+            pontuacao[1] = users[1].ponto  # Atualize a pontuação do Jogador 2
             if users[1].ponto == 10:  # Defina o número de acertos necessários para ganhar
                 ganhador = 2
+                alternar_turno()
             return "1"  # Retorne "1" para indicar que o ataque foi bem-sucedido
         elif tab1[px][py] == 2:  # Verifica se a posição já foi atacada
             return "2"
@@ -81,9 +97,9 @@ def send_tabuleiros(id, new_tab1, new_tab2):
 def verificar_ganhador():
     global ganhador
     if ganhador == 1:
-        return "Jogador 1 ganhou"
+        return "\nJOGADOR 1 GANHOU"
     elif ganhador == 2:
-        return "Jogador 2 ganhou"
+        return "\nJOGADOR 2 GANHOU"
     return "-"
 
 
@@ -93,7 +109,8 @@ with SimpleXMLRPCServer(('127.0.0.1', 8000)) as server:
     server.register_function(atacar, "atacar")
     server.register_function(verificar_ganhador, "ganhador")
     server.register_function(send_tabuleiros, "send_tabuleiros")
-
+    server.register_function(lambda: pontuacao[0], "pontuacao_jogador1")
+    server.register_function(lambda: pontuacao[1], "pontuacao_jogador2")
 
     print("Servidor da Batalha Naval em execução.")
     print("Aguardando conexões de jogadores...")

@@ -1,28 +1,49 @@
-import xmlrpc.client
+import xmlrpc.client # Importa a biblioteca XML-RPC para comunicação com o servidor.
 
 # Função para imprimir o tabuleiro
 def print_tabuleiro(tab):
     for row in tab:
         for cell in row:
-            print(f"[{' ' if cell == 0 else ('1' if tamanho == 1 else ('2' if tamanho == 2 else 'o')) }]", end='')
+            if cell == 0:
+                print("[ ]", end='')
+            elif cell == 1:
+                print("[x]", end='')  # Se o valor for 1, imprime 'x'
+            elif cell == 2:
+                print("[x]", end='')  # Se o valor for 2, também imprime 'x'
+            else:
+                print("[o]", end='')  # Caso contrário, imprime 'o'
         print()
         
 
 
-
+# Cria dois tabuleiros 6x6 para representar os tabuleiros dos jogadores.
 tab1 = [[0] * 6 for _ in range(6)]
 tab2 = [[0] * 6 for _ in range(6)]
 
-# Variáveis para controlar a pontuação dos jogadores
-pontuacao_jogador1 = 0
-pontuacao_jogador2 = 0
+# Variavel para controlar a pontuação dos jogadores
+pontuacao = 0
 
+# Cria uma conexão com o servidor usando a URL "http://127.0.0.1:8000/" e obtém um ID de jogador chamando a função logar no servidor.
 with xmlrpc.client.ServerProxy("http://127.0.0.1:8000/") as cli:
     id = cli.logar()
+    
+    # Pergunte ao jogador se ele quer jogar primeiro
+    escolha_primeiro = input("Você quer jogar primeiro? (sim/não): ").lower()
 
+    if escolha_primeiro == "sim":
+        jogador_primeiro = id
+        jogador_ativo = id
+        print("Você jogará primeiro.\n")
+    else:
+        # O outro jogador jogará primeiro
+        jogador_primeiro = 3 - id  # Alternar entre 1 e 2
+        print(f"O Jogador {jogador_primeiro} jogará primeiro.\n")
+
+    # Exibe uma mensagem de boas-vindas e informa ao jogador seu ID.
     print("Bem-vindo ao Jogo de Batalha Naval!")
     print(f"Você é o Jogador {id}. Posicione seus 4 barcos (1, 2, 3 e 4 casas).")
 
+    # Loop para permitir que o jogador posicione barcos no tabuleiro.
     for tamanho in range(1, 5):
         while True:
             print(f"Insira as coordenadas de posicionamento para um barco de {tamanho} casa(s):")
@@ -73,21 +94,22 @@ def enviar_tabuleiros(id, tab1, tab2):
 # tab1 e tab2 são as listas atualizadas no cliente
 enviar_tabuleiros(id, tab1, tab2)
 
+# Variável para controlar o jogador atual
+jogador = "Jogador 1" if id == 1 else "Jogador 2"
+
+# Entra em um loop principal que executa o jogo enquanto não houver um ganhador.
 while True:
+    # Obtém o estado atual do jogo (se há um ganhador).
     gg = cli.ganhador()
     if gg != "-":
         break
 
-    # Imprima a pontuação dos jogadores a cada atualização
-    print(f"Pontuação - Jogador 1: {pontuacao_jogador1}, Jogador 2: {pontuacao_jogador2}")
+    # Recupere as pontuações dos jogadores
+    pontuacao_jogador1 = cli.pontuacao_jogador1()
+    pontuacao_jogador2 = cli.pontuacao_jogador2()
 
-    # Verifique de quem é o turno
-    if id == 1 and gg == "-":
-        jogador = "Jogador 1"
-    elif id == 2 and gg == "-":
-        jogador = "Jogador 2"
-    else:
-        jogador = "Jogador desconhecido"
+    # Imprima a pontuação dos jogadores a cada atualização
+    print(f"\nPontuação - Jogador 1: {pontuacao_jogador1}, Jogador 2: {pontuacao_jogador2}")
 
     if gg == "-":
         ataque_p = input(f"{jogador}, insira as coordenadas de ataque (x y): ").split()
@@ -95,23 +117,21 @@ while True:
             ataque_p = list(map(int, ataque_p))
             if 0 <= ataque_p[0] <= 5 and 0 <= ataque_p[1] <= 5:
                 atk = cli.atacar(id, ataque_p[0], ataque_p[1])
-                print("Valor retornado da função atacar:", atk)
+
                 if int(atk) == 1:
+                    pontuacao += 1
+                    print("\nVocê acertou um barco inimigo!")
                     if jogador == "Jogador 1":
-                        pontuacao_jogador1 += 1
-                        print("Você acertou um barco inimigo!")
                         tab2[ataque_p[0] - 1][ataque_p[1] - 1] = 'x'
                     else:
-                        pontuacao_jogador2 += 1
-                        print("Você acertou um barco inimigo!")
                         tab1[ataque_p[0] - 1][ataque_p[1] - 1] = 'x'
                 elif int(atk) == 2:
-                    print("Você acertou uma posição já atacada.")
+                    print("\nVocê acertou uma posição já atacada.")
                 else:
-                    print("Seu ataque errou!")
+                    print("\nSeu ataque errou!")
             else:
-                print("Coordenadas de ataque fora dos limites. Escolha valores entre 1 e 6.")
+                print("\nCoordenadas de ataque fora dos limites. Escolha valores entre 1 e 6.")
         else:
-            print("Coordenadas de ataque inválidas. Insira duas coordenadas separadas por espaço.")
+            print("\nCoordenadas de ataque inválidas. Insira duas coordenadas separadas por espaço.")
 
 print(gg)
